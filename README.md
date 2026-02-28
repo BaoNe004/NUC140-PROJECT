@@ -72,4 +72,4 @@ In gameplay:
 Display + timing:
 - LCD redraws the grid and status text during gameplay.
 - Timer0 interrupt multiplexes the 7-segment to show bullets count and the currently selected coordinate value (X or Y).
-!-- Uploading "831220B5-E9E1-4B33-BEA0-42788E3470E0.mov"... --
+https://github.com/user-attachments/assets/123666d0-f9dc-41f0-ad3d-da3f342bfff8
