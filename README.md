@@ -32,6 +32,7 @@ Solution:
 - From this we're going to send data through SPI3 to display on the LCD
 - If Vin > 2.0 V, transmit “HEHE” over SPI2 (0x48 0x45 0x48 0x45) and show a small indicator text on LCD.
 - Otherwise, clear the indicator line.
+- https://github.com/user-attachments/assets/83ceb521-5fb2-474a-929f-8bfae5595e54
 
 # Question 3: Battleship Mini-Game
 
@@ -72,4 +73,4 @@ In gameplay:
 Display + timing:
 - LCD redraws the grid and status text during gameplay.
 - Timer0 interrupt multiplexes the 7-segment to show bullets count and the currently selected coordinate value (X or Y).
-https://github.com/user-attachments/assets/123666d0-f9dc-41f0-ad3d-da3f342bfff8
+- https://github.com/user-attachments/assets/123666d0-f9dc-41f0-ad3d-da3f342bfff8
