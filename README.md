@@ -1,8 +1,8 @@
 # NUC140-PROJECT
 
+# Question 1: UART0 Terminal Echo (USB-UART Bridge)
 
-**Question 1: UART0 Terminal Echo (USB-UART Bridge)
-**
+
 Description:
     Using a USB-UART adapter as a bridge between a PC Terminal and the NUC140 board, configure UART0 so the board can receive any character sent from the terminal and immediately send it back (echo).
 Requirements:
