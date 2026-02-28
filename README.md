@@ -1,172 +1,137 @@
 # NUC140-PROJECT
 
-# Question 1: UART0 Terminal Echo (USB-UART Bridge)
-
+#Question 1: UART0 Echo (PC Terminal ↔ NUC140)
 
 Description:
-    Using a USB-UART adapter as a bridge between a PC Terminal and the NUC140 board, configure UART0 so the board can receive any character sent from the terminal and immediately send it back (echo).
-Requirements:
-    
-    CPU clock frequency: 50 MHz
+Use a USB-UART adapter as a bridge between the PC Terminal and the NUC140 board. Configure UART0 so any character sent from the Terminal is received by the NUC140 and immediately transmitted back (echo).
+-CPU clock: 50 MHz (PLL from HXT)
+-UART clock source: 22.1184 MHz
+-UART channel: UART0 (TX PB1, RX PB0)
+-Frame format: 8N1 (1 start, 8 data, no parity, 1 stop)
+-Baud rate: 115200 bps
 
-    UART clock source: 22.1184 MHz
+Solution:
+-Configure system clock to 50 MHz and enable UART0 clock (22.1184 MHz source).
+-Configure UART0 line control: 8 data bits, no parity, 1 stop bit.
+-Set baud rate to 115200 using Mode 0 (BRD = 10 in code).
+-Enable UART RX interrupt (RDA) and NVIC UART02 IRQ.
+In UART02_IRQHandler:
+-Read incoming byte from RBR.
+-Write the same byte to THR to echo back to the Terminal.
 
-    UART channel: UART0 (TX/RX)
+Question 2: ADC7 Voltage Monitor + LCD Display + Conditional SPI2 TX
 
-    Frame format: 1 start bit + 8 data bits + no parity + 1 stop bit (8N1)
-
-    Baud rate: 115200 bps
-
-    Communication must work continuously (terminal -> NUC140 -> terminal)
-
-Solution / Implementation:
-
-    Configure system clock (HXT + PLL) to reach 50 MHz.
-
-    Configure UART0 clock source to 22.1184 MHz and set baud rate to 115200.
-
-    Configure UART0 line control: 8 data bits, no parity, 1 stop bit.
-
-    Enable UART0 RX interrupt (RDA).
-
-    In UART interrupt handler:
-
-    Read received byte from RBR (RX buffer).
-
-    Write the same byte to THR (TX buffer) to echo back to terminal.
-
-    Keep main loop empty (event-driven via interrupt).
-
-**Question 2: ADC7 Voltage Monitor + Conditional SPI Output + LCD Display
-**
 Description:
-Use the NUC140 ADC to continuously sample an analog voltage on ADC channel 7 (PA7), compute the input voltage, and display values on the LCD. When the voltage crosses a threshold, transmit a short message through SPI.
-Requirements:
+Use ADC channel 7 to continuously sample an analog voltage on PA7, convert it into a 12-bit digital value, calculate the input voltage (Vref = 3.3V), and display both values on the LCD. When the measured voltage is above a threshold, transmit a short message via SPI.
 
-CPU clock frequency: 50 MHz
+CPU clock: 50 MHz
 
-ADC: channel 7, 12-bit, Vref = 3.3 V
+ADC: channel 7, 12-bit, continuous scan mode, Vref = 3.3 V
 
-ADC mode: continuous scan
+Voltage conversion: Vin = ADC_value × 3.3 / (2^12 − 1)
 
-SPI (output): 1 MHz, idle high, transmit on rising edge, LSB first, 1 byte per transfer
+LCD uses SPI3 for display updates
 
-SPI pins used: PD0, PD1, PD3
+SPI2 output: 1 MHz, idle high, transmit on rising edge, LSB first, 8-bit per transfer
 
-LCD must show A/D value and calculated voltage
+SPI2 pins: PD0, PD1, PD3
+Threshold used in code: Vin > 2.0 V
 
-Solution / Implementation:
+Solution:
 
-Configure system clock to 50 MHz.
+Configure system clock to 50 MHz, enable clocks for ADC, SPI3 (LCD), and SPI2.
 
 ADC setup:
 
-Configure PA7 as ADC7 input and disable digital input path.
+Set PA7 as ADC7 input and disable digital input path.
 
-Enable ADC clock and set ADC to continuous scan mode.
+Enable ADC, select continuous scan mode, enable channel 7, start conversion.
 
-Start conversion and poll ADF flag each loop.
+In main loop:
 
-Read ADC result from ADDR[7].
+Wait for ADF flag, read ADC->ADDR[7], clear ADF.
 
-Convert ADC result to voltage using:
+Compute Vin using the formula above.
 
-Vin = ADC_value * Vref / (2^12 - 1)
+Display:
 
-LCD display (SPI3):
+Print static labels once (group name, reference voltage, resolution).
 
-Print static labels (group name, reference voltage, resolution).
+Update “A/D value” and “Voltage value” continuously on LCD.
 
-Update “A/D value” and “Voltage value” continuously.
+SPI condition:
 
-Conditional SPI output (SPI2):
+If Vin > 2.0 V, transmit “HEHE” over SPI2 (0x48 0x45 0x48 0x45) and show a small indicator text on LCD.
 
-If Vin > threshold (example: 2.0 V), send a short byte message (e.g., “HEHE”) via SPI2.
+Otherwise, clear the indicator line.
 
-If Vin <= threshold, do not transmit (and clear any indicator text on LCD).
+Question 3: Battleship Mini-Game (LCD + Keypad + Button Interrupt + 7-Segment + LED + Buzzer)
 
-**Question 3: Battleship Mini-Game (LCD + Keypad + Button Interrupt + 7-Segment + LED + Buzzer)
-**
 Description:
-Implement a simple Battleship-style game on the NUC140 using an 8x8 grid displayed on the LCD. The player selects target coordinates using a keypad and fires using a push button interrupt. The system tracks score, remaining shots, and shows win/lose feedback using LED and buzzer.
-Requirements:
+Implement a Battleship-style game on NUC140 using an 8x8 grid shown on the LCD. The player selects target coordinates using a 3x3 keypad and fires using an external interrupt button. The game tracks score and number of shots, and provides feedback using an LED and buzzer.
 
-LCD menu screen (title + author + small bitmap)
+LCD screens:
 
-Gameplay screen:
+Menu screen: “Battleship”, “By hehe”, plus a 32x32 bitmap
 
-8x8 grid display (“-” = unshot, “x” = hit)
-
-Show Score, Current X, Current Y on LCD
+Game screen: 8x8 grid (“-” = unshot, “x” = hit), Score, Current X, Current Y
 
 Input:
 
-Keypad selects coordinate values 1..8
+Keypad (3x3 matrix): keys 1–8 set coordinate values
 
-Key “9” toggles between editing X and Y
+Key 9 switches coordinate mode (edit X ↔ edit Y)
 
-Fire/shoot using external interrupt button
+Fire button: PB15 external interrupt (EINT1)
 
 Feedback:
 
-Hit toggles/flashes an LED
+Hit flashes LED on PC12
 
-Lose triggers buzzer beep
+Lose triggers buzzer on PB11
 
-Game rules:
+Rules in code:
 
-Win when all ship cells are hit (score reaches total ship cells)
+Win when Score == total ship cells (WinCon = count of 1s in map_ship)
 
-Lose when shot limit is reached (example limit: 16 shots)
+Lose when bullets (shots used) reaches 16
 
-Solution / Implementation:
+Solution:
 
-Game state machine:
+Build a simple state flow:
 
-State 0: Menu screen
+State 0: menu
 
-State 1: Playing (grid + status info)
+State 1: gameplay
 
-State 2: Win screen
+State 2: win screen
 
-State 3: Lose screen
+State 3: lose screen
 
-Keypad handling:
+Keypad scanning:
 
-Scan keypad matrix to detect key press.
+Scan PA0–PA5 as a matrix to detect keypress (1–9).
 
-If key = 9: toggle coordinate mode (X <-> Y).
+Key 9 toggles coordinateMode between X and Y.
 
-If key in 1..8: update currentX or currentY depending on mode.
+Keys 1–8 update currentX or currentY depending on mode.
 
-Shooting (EINT on button):
+Shooting (EINT1_IRQHandler on PB15):
 
-In menu state: button starts the game (switch to playing).
+In menu: press button to start (state 0 → 1).
 
-In playing state: button triggers “fire”:
+In gameplay:
 
 Check map_ship[currentY-1][currentX-1].
 
-If hit and not already hit, mark map_display and increment score.
+If hit and not previously marked, update map_display and increment score.
 
-Increment bullets (shots used).
+Increment bullets each shot.
 
-If score == WinCondition -> win state.
+Transition to win when score == WinCon, or lose when bullets >= 16.
 
-If bullets >= shot limit -> lose state.
+Display + timing:
 
-LCD rendering:
+LCD redraws the grid and status text during gameplay.
 
-Redraw 8x8 grid each loop from map_display.
-
-Display Score, Current X, Current Y at the side.
-
-7-segment display (Timer interrupt multiplexing):
-
-Show bullets (shots used) and current coordinate value depending on mode.
-
-LED and buzzer:
-
-Flash LED on hit.
-
-Beep buzzer once on lose screen.
+Timer0 interrupt multiplexes the 7-segment to show bullets count and the currently selected coordinate value (X or Y).
