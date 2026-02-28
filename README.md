@@ -33,7 +33,7 @@ Solution:
 - If Vin > 2.0 V, transmit “HEHE” over SPI2 (0x48 0x45 0x48 0x45) and show a small indicator text on LCD.
 - Otherwise, clear the indicator line.
 
-# Question 3: Battleship Mini-Game (LCD + Keypad + Button Interrupt + 7-Segment + LED + Buzzer)
+# Question 3: Battleship Mini-Game
 
 Description:
 Implement a Battleship-style game on NUC140 using an 8x8 grid shown on the LCD. The player selects target coordinates using a 3x3 keypad and fires using an external interrupt button. The game tracks score and number of shots, and provides feedback using an LED and buzzer.
