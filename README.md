@@ -1,6 +1,6 @@
 # NUC140-PROJECT
 
-#Question 1: UART0 Echo (PC Terminal ↔ NUC140)
+# Question 1: UART0 Echo (PC Terminal ↔ NUC140)
 
 Description:
 Use a USB-UART adapter as a bridge between the PC Terminal and the NUC140 board. Configure UART0 so any character sent from the Terminal is received by the NUC140 and immediately transmitted back (echo).
@@ -15,7 +15,7 @@ Solution:
 - If the RX is not empty, this means there's a pending message.
 - Receive that message through the RBR register, and send through THR register.
 
-#Question 2: ADC7 Voltage Monitor + LCD Display + Conditional SPI2 TX
+# Question 2: ADC7 Voltage Monitor + LCD Display + Conditional SPI2 TX
 
 Description:
 Use ADC channel 7 to continuously sample an analog voltage on PA7, convert it into a 12-bit digital value, calculate the input voltage (Vref = 3.3V), and display both values on the LCD. When the measured voltage is above a threshold, transmit a short message via SPI.
@@ -33,7 +33,7 @@ Solution:
 - If Vin > 2.0 V, transmit “HEHE” over SPI2 (0x48 0x45 0x48 0x45) and show a small indicator text on LCD.
 - Otherwise, clear the indicator line.
 
-#Question 3: Battleship Mini-Game (LCD + Keypad + Button Interrupt + 7-Segment + LED + Buzzer)
+# Question 3: Battleship Mini-Game (LCD + Keypad + Button Interrupt + 7-Segment + LED + Buzzer)
 
 Description:
 Implement a Battleship-style game on NUC140 using an 8x8 grid shown on the LCD. The player selects target coordinates using a 3x3 keypad and fires using an external interrupt button. The game tracks score and number of shots, and provides feedback using an LED and buzzer.
